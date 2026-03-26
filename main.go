@@ -123,5 +123,21 @@ func main() {
 		u.Id = id
 		return c.JSON(http.StatusOK, u)
 	})
+
+	e.DELETE("/users/:id", func(c echo.Context) error {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+		}
+		result, err := db.Exec("Delete from users where id = $1", id)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
+		return c.JSON(http.StatusOK, map[string]string{"message": "User deleted successfully"})
+	})
 	e.Logger.Fatal(e.Start(":8090"))
 }
